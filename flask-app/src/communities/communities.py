@@ -13,12 +13,12 @@ def find_exchange_communities():
         FROM Community
         WHERE Description LIKE '%textbook exchange%';
     """)
-    communities = cur.fetchall()
-    return jsonify(communities)
+    comm = cur.fetchall()
+    return jsonify(comm)
 
 # get all sharing session information for a community
-@communities.route('/user_textbooks/<int:user_id>', methods=['GET'])
-def get_user_textbooks(community_id):
+@communities.route('/get_sharing_sessions/<int:community_id>', methods=['GET'])
+def get_sharing_sessions(community_id):
     cursor = db.get_db().cursor()
     cursor.execute('''
     SELECT sharingSession.SessionID, sharingSession.Schedule, sharingSession.CommunityID, sharingSession.ResourceID
@@ -34,8 +34,8 @@ def get_user_textbooks(community_id):
     return jsonify(json_data)
 
 # get information of particular sharing session
-@communities.route('/user_textbooks/<int:user_id>', methods=['GET'])
-def get_user_textbooks(community_id):
+@communities.route('/sharing_info/<int:community_id>', methods=['GET'])
+def get_sharing_info(community_id):
     cursor = db.get_db().cursor()
     cursor.execute('''
     SELECT sharingSession.SessionID, sharingSession.Schedule, sharingSession.CommunityID, sharingSession.ResourceID
@@ -49,15 +49,59 @@ def get_user_textbooks(community_id):
         json_data.append(dict(zip(column_headers, row)))
     return jsonify(json_data)
 
+# creates a sharing session
+@communities.route('/create_sharing_session', methods=['POST'])
+def create_sharing_session():
+    # Extract data from the request
+    data = request.json
+    community_id = data.get('community_id')
+    schedule = data.get('schedule')
+    resource_id = data.get('resource_id')
+
+    # Check if all required fields are provided
+    if not (community_id and schedule):
+        return jsonify({"error": "Community ID and schedule are required"}), 400
+
+    # Insert the new sharing session into the database
+    cursor = db.get_db().cursor()
+    try:
+        cursor.execute('''
+            INSERT INTO SharingSession (CommunityID, Schedule, ResourceID)
+            VALUES (%s, %s, %s)
+        ''', (community_id, schedule, resource_id))
+        db.get_db().commit()
+        return jsonify({"success": "Sharing session created successfully"}), 201
+    except Exception as e:
+        db.get_db().rollback()
+        return jsonify({"error": str(e)}), 500
+    
+# deletes a sharing session
+@communities.route('/delete_sharing_session/<int:session_id>', methods=['DELETE'])
+def delete_sharing_session(session_id):
+    # Check if the session exists
+    cursor = db.get_db().cursor()
+    cursor.execute('SELECT * FROM SharingSession WHERE SessionID = %s', (session_id,))
+    session = cursor.fetchone()
+    if session is None:
+        return jsonify({"error": "Session not found"}), 404
+
+    try:
+        cursor.execute('DELETE FROM SharingSession WHERE SessionID = %s', (session_id,))
+        db.get_db().commit()
+        return jsonify({"success": "Session deleted successfully"}), 200
+    except Exception as e:
+        db.get_db().rollback()
+        return jsonify({"error": str(e)}), 500
+    
 # get all membership information for a user
-@communities.route('/user_textbooks/<int:user_id>', methods=['GET'])
-def get_user_textbooks(user_id):
+@communities.route('/user_member/<int:user_id>', methods=['GET'])
+def get_user_member(user_id):
     cursor = db.get_db().cursor()
     cursor.execute('''
-    SELECT membership.SessionID, membership.UserID, membership.CommunityID
-    FROM membership
-    JOIN User ON User.UserID = membership.UserID
-    WHERE UserID = %s
+    SELECT Membership.UserID, Membership.CommunityID
+    FROM Membership
+    JOIN User ON User.UserID = Membership.UserID
+    WHERE Membership.UserID = %s
     ''', (user_id,))
     column_headers = [x[0] for x in cursor.description]
     json_data = []
@@ -67,8 +111,8 @@ def get_user_textbooks(user_id):
     return jsonify(json_data)
 
 # get all membership information for a community
-@communities.route('/user_textbooks/<int:user_id>', methods=['GET'])
-def get_user_textbooks(community_id):
+@communities.route('/community_member/<int:community_id>', methods=['GET'])
+def get_community_member(community_id):
     cursor = db.get_db().cursor()
     cursor.execute('''
     SELECT membership.SessionID, membership.UserID, membership.CommunityID
@@ -83,6 +127,7 @@ def get_user_textbooks(community_id):
         json_data.append(dict(zip(column_headers, row)))
     return jsonify(json_data)
 
+#remove user as a member
 @communities.route('/remove_membership', methods=['DELETE'])
 def remove_textbook_from_exchange():
     membership_id = request.json.get('offer_id')
@@ -101,7 +146,7 @@ def remove_textbook_from_exchange():
     return jsonify({'success': 'Membership removed successfully'}), 200
 
 # insert new community
-@communities.route('/', methods=['POST'])
+@communities.route('/create_community', methods=['POST'])
 def create_community():
     community_data = request.json
     cur = db.get_db().cursor()
@@ -131,14 +176,43 @@ def update_community():
     cursor = db.get_db().cursor()
     r = cursor.execute(query, (new_description, community_id))
     db.get_db().commit()
-    
     if r:
         return jsonify({'success': 'Description updated successfully'}), 200
     else:
         return jsonify({'error': 'No records updated, check your offer_id'}), 404
+    
+    
+@communities.route('/add-member', methods=['POST'])
 
-
-
-
-
-
+#adds new member
+def add_member():
+    member_data = request.json
+    # Check if all required fields are provided
+    if 'community_id' not in member_data or 'user_id' not in member_data or 'role' not in member_data:
+        return jsonify({'error': 'community_id, user_id, and role are required fields'}), 400
+    community_id = member_data['community_id']
+    user_id = member_data['user_id']
+    role = member_data['role']
+    # Check if the provided community and user exist
+    cursor = db.get_db().cursor()
+    cursor.execute('SELECT * FROM Community WHERE CommunityID = %s', (community_id,))
+    community = cursor.fetchone()
+    cursor.execute('SELECT * FROM User WHERE UserID = %s', (user_id,))
+    user = cursor.fetchone()
+    
+    if community is None:
+        return jsonify({'error': 'Community does not exist'}), 404
+    
+    if user is None:
+        return jsonify({'error': 'User does not exist'}), 404
+    
+    # Add the user to the Membership table
+    try:
+        cursor.execute("""
+            INSERT INTO Membership (CommunityID, UserID, Role) 
+            VALUES (%s, %s, %s);
+            """, (community_id, user_id, role))
+        db.get_db().commit()
+        return jsonify({"success": True}), 201
+    except Exception as e:
+            return jsonify({'error': str(e)}), 500
