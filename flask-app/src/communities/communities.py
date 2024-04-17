@@ -7,14 +7,18 @@ communities = Blueprint('communities', __name__)
 # get all community information
 @communities.route('/exchange-focused', methods=['GET'])
 def find_exchange_communities():
-    cur = db.get_db().cursor()
-    cur.execute("""
+    cursor = db.get_db().cursor()
+    cursor.execute("""
         SELECT CommunityID, Name, Description
         FROM Community
         WHERE Description LIKE '%textbook exchange%';
     """)
-    comm = cur.fetchall()
-    return jsonify(comm)
+    column_headers = [x[0] for x in cursor.description]
+    json_data = []
+    theData = cursor.fetchall()
+    for row in theData:
+        json_data.append(dict(zip(column_headers, row)))
+    return jsonify(json_data)
 
 # get all sharing session information for a community
 @communities.route('/get_sharing_sessions/<int:community_id>', methods=['GET'])
