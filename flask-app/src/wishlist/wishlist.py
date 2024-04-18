@@ -61,11 +61,11 @@ def delete_wishlist(user_id, wishlist_id):
 
 
 # adds an item to the given wishlist
-@wishlist.route('/add-textbook-to-wishlist', methods=['POST'])
-def add_textbook_to_wishlist():
+# an item can be added multiple times
+@wishlist.route('/add-textbook-to-wishlist/<int:wishlist_id>', methods=['POST'])
+def add_textbook_to_wishlist(wishlist_id):
     # Extracting data from the request JSON
     data = request.get_json()
-    wishlist_id = data.get('wishlist_id')
     textbook_id = data.get('textbook_id')
 
     cursor = db.get_db().cursor()
