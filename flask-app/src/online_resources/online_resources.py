@@ -116,19 +116,3 @@ def view_all():
         json_data.append(dict(zip(column_headers, row)))
     return jsonify(json_data)
 
-
-# view the details of a specific digital resource
-@online_resources.route('/view-resources/<int:resource_id>', methods=['GET'])
-def view_this(resource_id):
-    cursor = db.get_db().cursor()
-    cursor.execute('''
-    SELECT Title, Format, AccessUrl
-    FROM DigitalResource
-    WHERE ResourceID = %s
-    ''', (resource_id,))
-    column_headers = [x[0] for x in cursor.description]
-    json_data = []
-    theData = cursor.fetchall()
-    for row in theData:
-        json_data.append(dict(zip(column_headers, row)))
-    return jsonify(json_data)
