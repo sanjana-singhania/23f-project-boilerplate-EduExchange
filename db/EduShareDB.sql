@@ -117,8 +117,35 @@ INSERT INTO User (Name, Email) VALUES
 ('Alex Johnson', 'alex.johnson@university.edu'),
 ('Jordan Lee', 'jordan.lee@university.edu'),
 ('Taylor Kim', 'taylor.kim@university.edu'),
-('Morgan Rivera', 'morgan.rivera@university.edu');
-
+('Morgan Rivera', 'morgan.rivera@university.edu'),
+('Emma Smith', 'emma.smith@university.edu'),
+('Noah Brown', 'noah.brown@university.edu'),
+('Olivia Wilson', 'olivia.wilson@university.edu'),
+('Liam Martinez', 'liam.martinez@university.edu'),
+('Ava Anderson', 'ava.anderson@university.edu'),
+('William Taylor', 'william.taylor@university.edu'),
+('Sophia Thomas', 'sophia.thomas@university.edu'),
+('Benjamin Hernandez', 'benjamin.hernandez@university.edu'),
+('Isabella Garcia', 'isabella.garcia@university.edu'),
+('James Lopez', 'james.lopez@university.edu'),
+('Amelia Perez', 'amelia.perez@university.edu'),
+('Lucas Scott', 'lucas.scott@university.edu'),
+('Mia Flores', 'mia.flores@university.edu'),
+('Henry Mitchell', 'henry.mitchell@university.edu'),
+('Charlotte Nguyen', 'charlotte.nguyen@university.edu'),
+('Ethan King', 'ethan.king@university.edu'),
+('Evelyn Cooper', 'evelyn.cooper@university.edu'),
+('Alexander Hill', 'alexander.hill@university.edu'),
+('Harper Green', 'harper.green@university.edu'),
+('Michael Adams', 'michael.adams@university.edu'),
+('Avery Baker', 'avery.baker@university.edu'),
+('Elizabeth Wright', 'elizabeth.wright@university.edu'),
+('Daniel Hall', 'daniel.hall@university.edu'),
+('Sofia Perez', 'sofia.perez@university.edu'),
+('Jackson Long', 'jackson.long@university.edu'),
+('Aria Gonzalez', 'aria.gonzalez@university.edu'),
+('Logan Campbell', 'logan.campbell@university.edu'),
+('Abigail Allen', 'abigail.allen@university.edu');
 
 INSERT INTO textbooks (ISBN, Author, Title, UserID) VALUES
 ('978-0-13-6083', 'Robert Sedgewick', 'Algorithms', 1),
@@ -162,6 +189,8 @@ INSERT INTO textbooks (ISBN, Author, Title, UserID) VALUES
 ('978-0-57-6239', 'John Miller', 'Art History', 1),
 ('978-0-32-2845', 'Laura Taylor', 'Environmental Science', 1),
 ('978-0-10-3025', 'Kevin Robinson', 'Economics', 1);
+
+
 
 INSERT INTO Wishlist (Name, UserID) VALUES
 ('My Favorite Textbooks', 1),
@@ -211,6 +240,7 @@ FROM
     (SELECT 1 UNION SELECT 2 UNION SELECT 3 UNION SELECT 4 UNION SELECT 5) AS t4,
     (SELECT 1 UNION SELECT 2 UNION SELECT 3 UNION SELECT 4 UNION SELECT 5) AS t5
     LIMIT 200;
+
 
 INSERT INTO ExchangeOffer (TextbookID, UserID, ConditionState, Price) VALUES
 (1, 1, 'Very Good', 20.00),
@@ -916,8 +946,8 @@ INSERT INTO RecyclingEvent (Location, Date, Description) VALUES
 ('International Relations Department Seminar Room', '2024-12-25', 'Recycle your textbooks and earn rewards!'),
 ('Public Administration Department Office', '2024-12-28', 'Donate your study materials and get eco-friendly giveaways!'),
 ('Urban Studies Department Lobby', '2025-01-01', 'Join our book swap event and reduce waste!'),
-('Architecture Department Studio', '2025-01-04', 'Recycle your textbooks and support our initiative!'),
-('Clean Ocean Action', '2025-01-31', 'Beach Clean Up');
+('Architecture Department Studio', '2025-01-04', 'Recycle your textbooks and support our initiative!');
+
 
 INSERT INTO EventParticipation (UserID, EventID, Role) VALUES
 (1, 1, 'Organizer'),
@@ -1160,4 +1190,3 @@ INSERT INTO EventParticipation (UserID, EventID, Role) VALUES
 (1, 80, 'Speaker'),
 (2, 80, 'Participant'),
 (3, 80, 'Participant');
-
