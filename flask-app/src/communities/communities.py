@@ -4,14 +4,13 @@ from src import db
 
 communities = Blueprint('communities', __name__)
 
-# get all community information
+# get all community information 
 @communities.route('/exchange-focused', methods=['GET'])
 def find_exchange_communities():
     cursor = db.get_db().cursor()
     cursor.execute("""
         SELECT CommunityID, Name, Description
-        FROM Community
-        WHERE Description LIKE '%textbook exchange%';
+        FROM Community;
     """)
     column_headers = [x[0] for x in cursor.description]
     json_data = []
@@ -25,11 +24,41 @@ def find_exchange_communities():
 def get_sharing_sessions(community_id):
     cursor = db.get_db().cursor()
     cursor.execute('''
-    SELECT sharingSession.SessionID, sharingSession.Schedule, sharingSession.CommunityID, sharingSession.ResourceID
-    FROM sharingSession
-    JOIN Community ON Community.CommunityID = sharingSession.CommunityID
-    WHERE CommunityID = %s
+    SELECT SharingSession.SessionID, SharingSession.Schedule, SharingSession.CommunityID, SharingSession.ResourceID
+    FROM SharingSession
+    JOIN Community ON Community.CommunityID = SharingSession.CommunityID
+    WHERE Community.CommunityID = %s
     ''', (community_id,))
+    column_headers = [x[0] for x in cursor.description]
+    json_data = []
+    theData = cursor.fetchall()
+    for row in theData:
+        json_data.append(dict(zip(column_headers, row)))
+    return jsonify(json_data)
+
+# get all sharing session information
+@communities.route('/get_all_sharing_sessions', methods=['GET'])
+def get_all_sharing_sessions():
+    cursor = db.get_db().cursor()
+    cursor.execute('''
+    SELECT *
+    FROM SharingSession
+    ''')
+    column_headers = [x[0] for x in cursor.description]
+    json_data = []
+    theData = cursor.fetchall()
+    for row in theData:
+        json_data.append(dict(zip(column_headers, row)))
+    return jsonify(json_data)
+
+# get all sharing session information
+@communities.route('/get_all_resources', methods=['GET'])
+def get_all_resources():
+    cursor = db.get_db().cursor()
+    cursor.execute('''
+    SELECT *
+    FROM DigitalResource
+    ''')
     column_headers = [x[0] for x in cursor.description]
     json_data = []
     theData = cursor.fetchall()
@@ -42,8 +71,8 @@ def get_sharing_sessions(community_id):
 def get_sharing_info(community_id):
     cursor = db.get_db().cursor()
     cursor.execute('''
-    SELECT sharingSession.SessionID, sharingSession.Schedule, sharingSession.CommunityID, sharingSession.ResourceID
-    FROM sharingSession
+    SELECT SharingSession.SessionID, SharingSession.Schedule, SharingSession.CommunityID, SharingSession.ResourceID
+    FROM SharingSession
     WHERE CommunityID = %s
     ''', (community_id,))
     column_headers = [x[0] for x in cursor.description]
@@ -53,26 +82,41 @@ def get_sharing_info(community_id):
         json_data.append(dict(zip(column_headers, row)))
     return jsonify(json_data)
 
-# creates a sharing session
-@communities.route('/create_sharing_session', methods=['POST'])
+# creates sharing sessions
+@communities.route('/sharing_sessions', methods=['POST'])
 def create_sharing_session():
     # Extract data from the request
-    data = request.json
-    community_id = data.get('community_id')
+    data = request.get_json()  # Ensures that data is properly extracted as JSON
+    community_name = data.get('community')
+    resource_title = data.get('resource')
     schedule = data.get('schedule')
-    resource_id = data.get('resource_id')
 
-    # Check if all required fields are provided
-    if not (community_id and schedule):
-        return jsonify({"error": "Community ID and schedule are required"}), 400
+    cursor = db.get_db().cursor()
+
+    # Retrieve CommunityID
+    cursor.execute("SELECT CommunityID FROM Community WHERE Name = %s", (community_name,))
+    community_result = cursor.fetchone()
+    if not community_result:
+        return jsonify({"error": "Community not found"}), 404
+    community_id = community_result[0]
+
+    # Retrieve ResourceID
+    cursor.execute("SELECT ResourceID FROM DigitalResource WHERE Title = %s", (resource_title,))
+    resource_result = cursor.fetchone()
+    if not resource_result:
+        return jsonify({"error": "Resource not found"}), 404
+    resource_id = resource_result[0]
+
+    # Check if schedule is provided
+    if not schedule:
+        return jsonify({"error": "Schedule is required"}), 400
 
     # Insert the new sharing session into the database
-    cursor = db.get_db().cursor()
     try:
-        cursor.execute('''
-            INSERT INTO SharingSession (CommunityID, Schedule, ResourceID)
-            VALUES (%s, %s, %s)
-        ''', (community_id, schedule, resource_id))
+        cursor.execute(
+            "INSERT INTO SharingSession (CommunityID, Schedule, ResourceID) VALUES (%s, %s, %s)",
+            (community_id, schedule, resource_id)
+        )
         db.get_db().commit()
         return jsonify({"success": "Sharing session created successfully"}), 201
     except Exception as e:
@@ -102,8 +146,9 @@ def delete_sharing_session(session_id):
 def get_user_member(user_id):
     cursor = db.get_db().cursor()
     cursor.execute('''
-    SELECT Membership.UserID, Membership.CommunityID
+    SELECT Community.Name as CommunityName, Membership.Role, User.Name as UserName
     FROM Membership
+    JOIN Community ON Membership.CommunityID = Community.CommunityID
     JOIN User ON User.UserID = Membership.UserID
     WHERE Membership.UserID = %s
     ''', (user_id,))
@@ -131,35 +176,70 @@ def get_community_member(community_id):
         json_data.append(dict(zip(column_headers, row)))
     return jsonify(json_data)
 
-#remove user as a member
-@communities.route('/remove_membership', methods=['DELETE'])
-def remove_textbook_from_exchange():
-    membership_id = request.json.get('offer_id')
-    
-    if not membership_id:
-        return jsonify({'error': 'Missing membership ID'}), 400
-
-    query = '''
-    DELETE FROM Membership
-    WHERE OfferID = %s;
-    '''
+# Removes a member from the community
+@communities.route('/remove-member', methods=['DELETE'])
+def remove_member():
+    member_data = request.json
+    # Check if all required fields are provided
+    if 'community_id' not in member_data or 'user_id' not in member_data:
+        return jsonify({'error': 'community_id and user_id are required fields'}), 400
+    community_id = member_data['community_id']
+    user_id = member_data['user_id']
+    # Check if the provided community and user exist
     cursor = db.get_db().cursor()
-    cursor.execute(query, (membership_id,))
-    db.get_db().commit()
+    cursor.execute('SELECT * FROM Community WHERE CommunityID = %s', (community_id,))
+    community = cursor.fetchone()
+    cursor.execute('SELECT * FROM User WHERE UserID = %s', (user_id,))
+    user = cursor.fetchone()
     
-    return jsonify({'success': 'Membership removed successfully'}), 200
+    if community is None:
+        return jsonify({'error': 'Community does not exist'}), 404
+    
+    if user is None:
+        return jsonify({'error': 'User does not exist'}), 404
+    
+    # Check if the user is a member of the community
+    cursor.execute('SELECT * FROM Membership WHERE CommunityID = %s AND UserID = %s', (community_id, user_id))
+    membership = cursor.fetchone()
+    
+    if membership is None:
+        return jsonify({'error': 'User is not a member of the community'}), 404
+    
+    # Remove the user from the Membership table
+    try:
+        cursor.execute('DELETE FROM Membership WHERE CommunityID = %s AND UserID = %s', (community_id, user_id))
+        db.get_db().commit()
+        return jsonify({"success": True}), 200
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
 
 # insert new community
 @communities.route('/create_community', methods=['POST'])
 def create_community():
-    community_data = request.json
-    cur = db.get_db().cursor()
-    cur.execute("""
-        INSERT INTO Community (Name, Description) 
-        VALUES (%s, %s);
-    """, (community_data['Name'], community_data['Description']))
-    db.commit()
-    return jsonify({"success": True}), 201
+    try:
+        # Get JSON data from the request
+        community_data = request.json
+        
+        # Validate required fields
+        if 'Name' not in community_data or 'Description' not in community_data:
+            return jsonify({"error": "Name and Description are required"}), 400
+        
+        # Insert new community into the database
+        with db.get_db().cursor() as cur:
+            cur.execute("""
+                INSERT INTO Community (Name, Description) 
+                VALUES (%s, %s);
+            """, (community_data['Name'], community_data['Description']))
+        
+        # Commit the transaction
+        db.get_db().commit()
+        
+        # Return success response
+        return jsonify({"success": True}), 201
+    except Exception as e:
+        # Handle exceptions and return appropriate error response
+        return jsonify({"error": str(e)}), 500
 
 # update community description
 @communities.route('/update_description', methods=['PUT'])
@@ -185,10 +265,8 @@ def update_community():
     else:
         return jsonify({'error': 'No records updated, check your offer_id'}), 404
     
-    
+# adds new member
 @communities.route('/add-member', methods=['POST'])
-
-#adds new member
 def add_member():
     member_data = request.json
     # Check if all required fields are provided
@@ -213,10 +291,10 @@ def add_member():
     # Add the user to the Membership table
     try:
         cursor.execute("""
-            INSERT INTO Membership (CommunityID, UserID, Role) 
-            VALUES (%s, %s, %s);
-            """, (community_id, user_id, role))
+        INSERT INTO Membership (CommunityID, UserID, Role) 
+         VALUES (%s, %s, %s);
+        """, (community_id, user_id, role))
         db.get_db().commit()
         return jsonify({"success": True}), 201
     except Exception as e:
-            return jsonify({'error': str(e)}), 500
+        return jsonify({'error': str(e)}), 500
