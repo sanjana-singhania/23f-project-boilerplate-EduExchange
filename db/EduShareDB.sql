@@ -17,6 +17,8 @@ CREATE TABLE IF NOT EXISTS `edusharehub`.`textbooks` (
   Title VARCHAR(255) NOT NULL,
   UserID INT NOT NULL,
   FOREIGN KEY (UserID) REFERENCES User(UserID)
+  ON UPDATE CASCADE 
+  ON DELETE CASCADE
 );
 
 -- Wishlist Table
@@ -25,6 +27,8 @@ CREATE TABLE IF NOT EXISTS  `edusharehub`.`Wishlist` (
   Name VARCHAR(50) NOT NULL,
   UserID INT NOT NULL,
   FOREIGN KEY (UserID) REFERENCES User(UserID)
+  ON UPDATE CASCADE 
+  ON DELETE CASCADE
 );
 
 -- Wishlist Item Table
@@ -32,8 +36,12 @@ CREATE TABLE IF NOT EXISTS `edusharehub`. `WishlistItem` (
   WishlistItemID INT AUTO_INCREMENT PRIMARY KEY,
   WishlistID INT NOT NULL,
   TextbookID INT NOT NULL,
-  FOREIGN KEY (WishlistID) REFERENCES Wishlist(WishlistID),
+  FOREIGN KEY (WishlistID) REFERENCES Wishlist(WishlistID)
+  ON UPDATE CASCADE 
+  ON DELETE CASCADE,
   FOREIGN KEY (TextbookID) REFERENCES textbooks(TextbookID)
+  ON UPDATE CASCADE 
+  ON DELETE CASCADE
 );
 
 -- Exchange Offer Table
@@ -43,8 +51,12 @@ CREATE TABLE IF NOT EXISTS `edusharehub`.`ExchangeOffer` (
   UserID INT NOT NULL,
   ConditionState VARCHAR(255) NOT NULL,
   Price DECIMAL(10, 2) NOT NULL,
-  FOREIGN KEY (TextbookID) REFERENCES textbooks(TextbookID),
+  FOREIGN KEY (TextbookID) REFERENCES textbooks(TextbookID)
+  ON UPDATE CASCADE 
+  ON DELETE CASCADE,
   FOREIGN KEY (UserID) REFERENCES User(UserID)
+  ON UPDATE CASCADE 
+  ON DELETE CASCADE
 );
 
 -- Exchange Transaction Table
@@ -53,8 +65,12 @@ CREATE TABLE IF NOT EXISTS `edusharehub`.`ExchangeTransaction` (
   OfferID INT NOT NULL,
   RequesterID INT NOT NULL,
   Status VARCHAR(255) NOT NULL,
-  FOREIGN KEY (OfferID) REFERENCES ExchangeOffer(OfferID),
+  FOREIGN KEY (OfferID) REFERENCES ExchangeOffer(OfferID)
+  ON UPDATE CASCADE 
+  ON DELETE CASCADE,
   FOREIGN KEY (RequesterID) REFERENCES User(UserID)
+  ON UPDATE CASCADE 
+  ON DELETE CASCADE
 );
 
 -- Community Table
@@ -70,8 +86,12 @@ CREATE TABLE IF NOT EXISTS `edusharehub`.`Membership` (
   UserID INT,
   Role VARCHAR(255) NOT NULL,
   PRIMARY KEY (CommunityID, UserID),
-  FOREIGN KEY (CommunityID) REFERENCES Community(CommunityID),
+  FOREIGN KEY (CommunityID) REFERENCES Community(CommunityID)
+  ON UPDATE CASCADE 
+  ON DELETE CASCADE,
   FOREIGN KEY (UserID) REFERENCES User(UserID)
+  ON UPDATE CASCADE 
+  ON DELETE CASCADE
 );
 
 -- Sharing Session Table
@@ -80,8 +100,12 @@ CREATE TABLE IF NOT EXISTS `edusharehub`.`SharingSession` (
   CommunityID INT NOT NULL,
   ResourceID INT,
   Schedule DATETIME NOT NULL,
-  FOREIGN KEY (CommunityID) REFERENCES Community(CommunityID),
+  FOREIGN KEY (CommunityID) REFERENCES Community(CommunityID)
+  ON UPDATE CASCADE 
+  ON DELETE CASCADE,
   FOREIGN KEY (ResourceID) REFERENCES textbooks(TextbookID)
+  ON UPDATE CASCADE 
+  ON DELETE CASCADE
 );
 
 -- Digital Resource Table
@@ -92,6 +116,8 @@ CREATE TABLE IF NOT EXISTS `edusharehub`.`DigitalResource` (
   Format VARCHAR(50) NOT NULL,
   AccessURL VARCHAR(255) NOT NULL,
   FOREIGN KEY (UserID) REFERENCES User(UserID)
+  ON UPDATE CASCADE 
+  ON DELETE CASCADE
 );
 
 -- Recycling Event Table
@@ -108,8 +134,12 @@ CREATE TABLE IF NOT EXISTS `edusharehub`.`EventParticipation` (
   EventID INT,
   Role VARCHAR(255) NOT NULL,
   PRIMARY KEY (UserID, EventID),
-  FOREIGN KEY (UserID) REFERENCES User(UserID),
+  FOREIGN KEY (UserID) REFERENCES User(UserID)
+  ON UPDATE CASCADE 
+  ON DELETE CASCADE,
   FOREIGN KEY (EventID) REFERENCES RecyclingEvent(EventID)
+  ON UPDATE CASCADE 
+  ON DELETE CASCADE
 );
 
 
