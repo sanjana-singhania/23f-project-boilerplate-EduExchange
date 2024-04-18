@@ -61,6 +61,30 @@ def add_textbook(user_id):
     
     return jsonify({'success': 'Textbook added successfully'}), 201
 
+# updates a textbook's condition
+@online_resources.route('/update_textbook/<int:user_id>/<int:textbook_id>', methods=['PUT'])
+def update_textbook_condition(user_id, textbook_id):
+    updated_details = request.json
+    
+    isbn = updated_details['isbn']
+    author = updated_details['author']
+    title = updated_details['title']
+
+    query = '''
+    UPDATE textbooks
+    SET isbn = %s, author = %s, title = %s
+    WHERE UserID = %s AND TextbookID = %s;
+    '''
+    cursor = db.get_db().cursor()
+    r = cursor.execute(query, (isbn, author, title, user_id, textbook_id))
+    db.get_db().commit()
+    
+    if r:
+        return jsonify({'success': 'Condition updated successfully'}), 200
+    else:
+        return jsonify({'error': 'No records updated, check your textbook_id'}), 404
+
+
 # User Story 5 -- textbooks
 @online_resources.route('/delete_textbook/<int:user_id>/<int:textbook_id>', methods=['DELETE'])
 def delete_textbook(user_id, textbook_id):
