@@ -163,8 +163,6 @@ INSERT INTO textbooks (ISBN, Author, Title, UserID) VALUES
 ('978-0-32-2845', 'Laura Taylor', 'Environmental Science', 1),
 ('978-0-10-3025', 'Kevin Robinson', 'Economics', 1);
 
-
-
 INSERT INTO Wishlist (Name, UserID) VALUES
 ('My Favorite Textbooks', 1),
 ('Study Materials', 2),
@@ -918,8 +916,8 @@ INSERT INTO RecyclingEvent (Location, Date, Description) VALUES
 ('International Relations Department Seminar Room', '2024-12-25', 'Recycle your textbooks and earn rewards!'),
 ('Public Administration Department Office', '2024-12-28', 'Donate your study materials and get eco-friendly giveaways!'),
 ('Urban Studies Department Lobby', '2025-01-01', 'Join our book swap event and reduce waste!'),
-('Architecture Department Studio', '2025-01-04', 'Recycle your textbooks and support our initiative!');
-
+('Architecture Department Studio', '2025-01-04', 'Recycle your textbooks and support our initiative!'),
+('Clean Ocean Action', '2025-01-31', 'Beach Clean Up');
 
 INSERT INTO EventParticipation (UserID, EventID, Role) VALUES
 (1, 1, 'Organizer'),
@@ -1162,5 +1160,4 @@ INSERT INTO EventParticipation (UserID, EventID, Role) VALUES
 (1, 80, 'Speaker'),
 (2, 80, 'Participant'),
 (3, 80, 'Participant');
-
 
