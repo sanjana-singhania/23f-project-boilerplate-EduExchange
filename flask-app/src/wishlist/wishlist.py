@@ -120,10 +120,7 @@ def get_items_in_wishlist(user_id, wishlist_id):
 
     # Fetch all rows from the result
     wishlist_items = cursor.fetchall()
-
-    if not wishlist_items:
-        return jsonify({'message': 'No wishlist items found for this user'}), 404
-
+    
     # Construct JSON response
     wishlist_data = []
     for item in wishlist_items:
