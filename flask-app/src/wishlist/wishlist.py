@@ -24,6 +24,7 @@ def create_wishlist(user_id):
     
     return jsonify({'success': 'Wishlist created successfully'}), 201
 
+# 
 @wishlist.route('/update-wishlist-name/<int:user_id>/<int:wishlist_id>', methods=['PUT'])
 def update_wishlist_name(user_id, wishlist_id):
     # Extract the new wishlist name from the request JSON
@@ -61,11 +62,11 @@ def delete_wishlist(user_id, wishlist_id):
 
 
 # adds an item to the given wishlist
-# an item can be added multiple times
-@wishlist.route('/add-textbook-to-wishlist/<int:wishlist_id>', methods=['POST'])
-def add_textbook_to_wishlist(wishlist_id):
+@wishlist.route('/add-textbook-to-wishlist', methods=['POST'])
+def add_textbook_to_wishlist():
     # Extracting data from the request JSON
     data = request.get_json()
+    wishlist_id = data.get('wishlist_id')
     textbook_id = data.get('textbook_id')
 
     cursor = db.get_db().cursor()
@@ -119,6 +120,9 @@ def get_items_in_wishlist(user_id, wishlist_id):
 
     # Fetch all rows from the result
     wishlist_items = cursor.fetchall()
+
+    if not wishlist_items:
+        return jsonify({'message': 'No wishlist items found for this user'}), 404
 
     # Construct JSON response
     wishlist_data = []
