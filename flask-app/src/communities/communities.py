@@ -51,7 +51,7 @@ def get_all_sharing_sessions():
         json_data.append(dict(zip(column_headers, row)))
     return jsonify(json_data)
 
-# get all sharing session information
+# get all digital resources information
 @communities.route('/get_all_resources', methods=['GET'])
 def get_all_resources():
     cursor = db.get_db().cursor()
